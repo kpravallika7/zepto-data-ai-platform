@@ -26,7 +26,7 @@ Rules:
    question, clearly state that the available Zepto policy context
    does not provide enough information.
 5. Identify the source document(s) that support the answer.
-6. Assign a confidence value of "high", "medium", or "low" based on
+6. Assign a confidence value between 0.0 and 1.0 based on
    how directly the retrieved context answers the question.
 
 FEW-SHOT EXAMPLE:
@@ -51,7 +51,7 @@ Return ONLY a valid JSON object with exactly these fields:
 {
   "answer": "string",
   "sources": ["string"],
-  "confidence": "high | medium | low"
+  "confidence": 0.9
 }
 
 The "sources" field must contain the document filenames from the

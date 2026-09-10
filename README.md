@@ -2,11 +2,11 @@
 
 An end-to-end AI/ML platform built for Zepto's analytics guild, made of three connected modules that live in this single repository:
 
-| Module | Folder | Marks | What it does |
-|---|---|---|---|
-| 1. Data Pipeline | [`/data_pipeline`](./data_pipeline) | 25 | Scrapes book catalog data, cleans and converts it, stores it in a relational SQLite database, and queries it with SQL and pandas. |
-| 2. Analytics Pipeline | [`/analytics`](./analytics) | 50 | Profiles and cleans the Titanic dataset, tells a visual data story, then builds, tunes, and evaluates a full classification + regression modeling pipeline. |
-| 3. Support Assistant | [`/support_assistant`](./support_assistant) | 25 | A RAG-based GenAI assistant that answers Zepto policy questions, grounded in Zepto's own documents, served through a LangGraph workflow and a FastAPI endpoint. |
+| Module                | Folder                                      | Marks | What it does                                                                                                                                                    |
+| --------------------- | ------------------------------------------- | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. Data Pipeline      | [`/data_pipeline`](./data_pipeline)         | 25    | Scrapes book catalog data, cleans and converts it, stores it in a relational SQLite database, and queries it with SQL and pandas.                               |
+| 2. Analytics Pipeline | [`/analytics`](./analytics)                 | 50    | Profiles and cleans the Titanic dataset, tells a visual data story, then builds, tunes, and evaluates a full classification + regression modeling pipeline.     |
+| 3. Support Assistant  | [`/support_assistant`](./support_assistant) | 25    | A RAG-based GenAI assistant that answers Zepto policy questions, grounded in Zepto's own documents, served through a LangGraph workflow and a FastAPI endpoint. |
 
 The three modules are graded independently but are meant to read as one story: a data pipeline feeds clean structured data, an analytics pipeline shows how Zepto would model outcomes end to end, and a support assistant shows how Zepto would put a grounded GenAI service in front of its own policies.
 
@@ -43,28 +43,34 @@ pip install -r support_assistant/requirements.txt
 ## 2. How to run each module
 
 ### Module 1 — Data Pipeline
+
 ```powershell
 pip install -r requirements.txt
 cd data_pipeline
 python run_pipeline.py
 ```
+
 This scrapes BooksToScrape live, cleans and converts the data, (re)builds `data/books.db` from scratch, runs the required SQL queries into `sql_outputs/`, and verifies the SQL JOIN against a `pandas.merge()` equivalent. See [`data_pipeline/README.md`](./data_pipeline/README.md) for full details and sample output.
 
 ### Module 2 — Analytics Pipeline
+
 ```powershell
 pip install -r analytics/requirements.txt
 cd analytics
 python module2.py
 ```
+
 The Titanic dataset is loaded once (via Seaborn, with `analytics/titanic.csv` committed as an offline fallback), cleaned, profiled, visualized, and then used for classification, imbalance handling, hyperparameter tuning, and a separate fare-regression task. All charts, the model comparison table, and the saved pipeline artifact are written to `analytics/outputs/`. See [`analytics/README.md`](./analytics/README.md) for the full write-up, metrics, and interpretations.
 
 ### Module 3 — Support Assistant
+
 ```powershell
 pip install -r support_assistant/requirements.txt
 cd support_assistant
 python ingest.py          # embeds the 8 policy docs into ChromaDB
 uvicorn api:app --reload  # starts the FastAPI service on http://127.0.0.1:8000
 ```
+
 By default `MOCK_LLM=1`, so the whole pipeline (intent classification, retrieval, answer generation) runs deterministically with no LLM API key required. Swagger docs are at `http://127.0.0.1:8000/docs`. A Dockerfile is also included — see [`support_assistant/README.md`](./support_assistant/README.md) for build/run commands, the architecture write-up, and example request/response transcripts.
 
 ---
@@ -75,7 +81,7 @@ By default `MOCK_LLM=1`, so the whole pipeline (intent classification, retrieval
 
 **Module 2 (Analytics Pipeline).** Missing values are handled per the assignment's percentage-threshold rule (drop rows under 5% missing, impute between 5–30%, drop the column above 30% when imputation would be unreliable) — this produced a cleaned 889-row, 14-column dataset. Modeling preprocessing is deliberately kept separate from the EDA-stage cleaning: it's implemented as a `ColumnTransformer` (median-impute + `StandardScaler` for numeric features, most-frequent-impute + one-hot for categorical features) wrapped inside each model's `Pipeline`, so it structurally cannot be fit on anything but the training split. Logistic Regression is the final recommended classifier based on F1 and AUC. Full metrics, interpretations, and the final recommendation are in the module README.
 
-**Module 3 (Support Assistant).** Retrieval always runs for real in both modes (embeddings and ChromaDB need no API key), while only the final *generation* step branches on `MOCK_LLM`. The graded baseline (`MOCK_LLM=1`, the default) is fully deterministic: intent is classified by keyword heuristic and answers are template-filled from the top retrieved chunk, so the module needs zero external API calls to be graded end to end. The optional `MOCK_LLM=0` path adds a real Groq LLM call with Pydantic-schema retry-on-failure logic, purely as an ungraded stretch. Full architecture walkthrough is in the module README.
+**Module 3 (Support Assistant).** Retrieval always runs for real in both modes (embeddings and ChromaDB need no API key), while only the final _generation_ step branches on `MOCK_LLM`. The graded baseline (`MOCK_LLM=1`, the default) is fully deterministic: intent is classified by keyword heuristic and answers are template-filled from the top retrieved chunk, so the module needs zero external API calls to be graded end to end. The optional `MOCK_LLM=0` path adds a real Groq LLM call with Pydantic-schema retry-on-failure logic, purely as an ungraded stretch. Full architecture walkthrough is in the module README.
 
 ---
 
@@ -113,6 +119,19 @@ zepto-data-ai-platform/
 
 ---
 
-## 5. Git workflow
+## Git Workflow
 
-Documentation and dependency fixes for this submission were developed on a feature branch and merged back into `main` (see the repository's commit/merge history), per the project's required git workflow.
+The project uses feature branches for documentation and maintenance changes.
+
+Typical workflow:
+
+```bash
+git checkout -b feature/<change-name>
+git add .
+git commit -m "Describe the first change"
+git add .
+git commit -m "Describe the second change"
+git checkout main
+git merge --no-ff feature/<change-name>
+git push origin main
+```
