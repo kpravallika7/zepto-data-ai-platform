@@ -42,7 +42,7 @@ Example answer:
 {
   "answer": "No. Orders below INR 149 incur a flat INR 25 delivery fee.",
   "sources": ["doc_01.txt"],
-  "confidence": "high"
+  "confidence": 0.9
 }
 
 FORMAT:
